@@ -1,0 +1,21 @@
+name: MinerSeller
+version: '${project.version}'
+main: top.lordgamer.minerseller.MinerSellerPlugin
+api-version: '1.19'
+author: LordGamer TOP
+description: Красивый GUI-скупщик руд и ресурсов.
+
+commands:
+  miner:
+    description: Открыть меню скупщика
+    usage: /miner [reload]
+    aliases: [minebuyer, шахтер, шахтёр, руды]
+    permission: minerseller.use
+
+permissions:
+  minerseller.use:
+    description: Доступ к меню скупщика
+    default: true
+  minerseller.admin:
+    description: Доступ к /miner reload
+    default: op

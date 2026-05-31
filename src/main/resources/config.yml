@@ -1,0 +1,110 @@
+# ============================================
+#            MinerSeller — Скупщик
+# ============================================
+
+menu:
+  title: '&8| &#A6E0EEMɪɴᴇʀ &8|'
+  size: 54
+
+# Команда выдачи валюты. %player% и %amount% подставляются автоматически.
+eco-command: 'eco give %player% %amount%'
+
+# Звук при продаже (имя из Bukkit Sound). Оставь пустым, чтобы отключить.
+sell-sound: ENTITY_EXPERIENCE_ORB_PICKUP
+
+messages:
+  prefix: '&8[&#A6E0EEMiner&8] &r'
+  no-items: '&cУ тебя нет &f%material% &cв инвентаре.'
+  sold: '&aПродано &f%amount%&7x &f%material% &aза &e%total%$&a.'
+  sold-all: '&aПродано всё на сумму &e%total%$&a.'
+  nothing-to-sell: '&cНечего продавать.'
+
+# Рамка по краям меню
+filler:
+  material: GRAY_STAINED_GLASS_PANE
+  name: '&7'
+  slots: [0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,49,51,52,53]
+
+# Кнопка "Продать всё"
+sell-all:
+  material: HOPPER
+  slot: 50
+  name: '&#B9E6AE▪ Продать всё'
+  lore:
+    - ''
+    - ' &#ddddddПродаёт &#EFE0A1все скупаемые ресурсы'
+    - ' &#ddddddиз твоего инвентаря.'
+    - ''
+    - ' &#eaff43► &#EFE0A1Нажми, чтобы продать всё'
+    - ''
+
+# Кнопка выхода
+exit:
+  material: WITHER_SKELETON_SKULL
+  slot: 48
+  name: '&7▪ &#EEBDA6Выход'
+
+# Шаблон описания (lore) для скупаемых предметов.
+# Плейсхолдеры: %price1% %price64% %priceAll% %have%
+item-lore:
+  - ''
+  - ' &#ddddddЦена за &#EFE0A1x1: &f%price1%&#EBC162 © &#b9b9b9(ЛКМ)'
+  - ' &#ddddddЦена за &#EFE0A1x64: &f%price64%&#EBC162 © &#b9b9b9(ПКМ)'
+  - ''
+  - ' &#ddddddЦена за &#EFE0A1всё: &f%priceAll%&#EBC162 © &#b9b9b9(ШИФТ+ЛКМ)'
+  - ''
+  - ' &#ddddddВ инвентаре: &#EFE0A1%have% &#ddddddшт.'
+  - ''
+
+# Скупаемые предметы. price — цена за 1 штуку.
+items:
+  coal:
+    material: COAL
+    slot: 20
+    price: 5
+    name: '&#FFFFFFУголь'
+  copper:
+    material: RAW_COPPER
+    slot: 21
+    price: 7
+    name: '&#E0966FСырая медь'
+  iron:
+    material: RAW_IRON
+    slot: 22
+    price: 12
+    name: '&#E8E8E8Сырое железо'
+  gold:
+    material: RAW_GOLD
+    slot: 23
+    price: 30
+    name: '&#FFE259Сырое золото'
+  redstone:
+    material: REDSTONE
+    slot: 24
+    price: 6
+    name: '&#FF5555Редстоун'
+  lapis:
+    material: LAPIS_LAZULI
+    slot: 29
+    price: 8
+    name: '&#3B6CFFЛазурит'
+  quartz:
+    material: QUARTZ
+    slot: 30
+    price: 9
+    name: '&#F2EDE4Кварц'
+  diamond:
+    material: DIAMOND
+    slot: 31
+    price: 120
+    name: '&#4AEDD9Алмаз'
+  emerald:
+    material: EMERALD
+    slot: 32
+    price: 60
+    name: '&#3DDC84Изумруд'
+  netherite:
+    material: NETHERITE_SCRAP
+    slot: 33
+    price: 800
+    name: '&#6E5B5BНезеритовый лом'
