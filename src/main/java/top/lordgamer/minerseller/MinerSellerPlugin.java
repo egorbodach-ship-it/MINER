@@ -17,7 +17,10 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import net.milkbowl.vault.economy.Economy;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -37,7 +40,9 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
     private String menuTitle;
     private int menuSize;
     private String ecoCommand;
+    private boolean useVault;
     private Sound sellSound;
+    private Economy economy;
 
     private final List<Filler> fillers = new ArrayList<>();
     private final Map<Integer, ItemStack> decorations = new LinkedHashMap<>();
@@ -83,6 +88,7 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
     public void onEnable() {
         saveDefaultConfig();
         load();
+        setupEconomy();
         getServer().getPluginManager().registerEvents(this, this);
         if (getCommand("miner") != null) getCommand("miner").setExecutor(this);
         getLogger().info("MinerSeller enabled.");
@@ -99,6 +105,7 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
         if (menuSize % 9 != 0 || menuSize <= 0 || menuSize > 54) menuSize = 54;
 
         ecoCommand = getConfig().getString("eco-command", "eco give %player% %amount%");
+        useVault = getConfig().getBoolean("use-vault", true);
         String soundName = getConfig().getString("sell-sound", "");
         Sound s = null;
         if (soundName != null && !soundName.isEmpty()) {
@@ -331,8 +338,27 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
         if (sellSound != null) p.playSound(p.getLocation(), sellSound, 1f, 1f);
     }
 
+    private void setupEconomy() {
+        economy = null;
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            getLogger().warning("Vault не найден — использую резервную eco-command.");
+            return;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            getLogger().warning("Vault есть, но экономический плагин не найден (поставь EssentialsX/CMI). Использую eco-command.");
+            return;
+        }
+        economy = rsp.getProvider();
+        if (economy != null) getLogger().info("Vault economy подключён: " + economy.getName());
+    }
+
     private void payout(Player p, double total) {
         if (total <= 0) return;
+        if (useVault && economy != null) {
+            economy.depositPlayer(p, total);
+            return;
+        }
         String cmd = ecoCommand.replace("%player%", p.getName()).replace("%amount%", fmt(total));
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
     }

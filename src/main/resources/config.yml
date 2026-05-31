@@ -7,7 +7,12 @@ menu:
   title: '              &8| ᴍɪɴᴇʀ |'
   size: 54
 
-# Команда выдачи валюты. %player% и %amount% подставляются автоматически.
+# Выдача валюты:
+#  use-vault: true  -> начислять деньги напрямую через Vault (рекомендуется).
+#                      Нужен любой эко-плагин, зарегистрированный в Vault (EssentialsX, CMI и т.п.).
+#  use-vault: false -> выполнять команду eco-command от консоли.
+use-vault: true
+# Резервная команда, если Vault-экономика не найдена. %player% и %amount% подставляются автоматически.
 eco-command: 'eco give %player% %amount%'
 # Звук при успешной продаже (имя из org.bukkit.Sound). Пусто = без звука.
 sell-sound: ENTITY_EXPERIENCE_ORB_PICKUP
