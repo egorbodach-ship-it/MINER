@@ -16,14 +16,17 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,21 +39,16 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
     private String ecoCommand;
     private Sound sellSound;
 
-    private Material fillerMat;
-    private String fillerName;
-    private final List<Integer> fillerSlots = new ArrayList<>();
+    private final List<Filler> fillers = new ArrayList<>();
+    private final Map<Integer, ItemStack> decorations = new LinkedHashMap<>();
 
     private int exitSlot;
-    private Material exitMat;
-    private String exitName;
+    private ItemStack exitItem;
 
     private int sellAllSlot;
-    private Material sellAllMat;
-    private String sellAllName;
-    private List<String> sellAllLore = new ArrayList<>();
+    private ItemStack sellAllItem;
 
     private List<String> itemLoreTemplate = new ArrayList<>();
-
     private final Map<Integer, SellEntry> entriesBySlot = new LinkedHashMap<>();
 
     private String msgPrefix, msgNoItems, msgSold, msgSoldAll, msgNothing;
@@ -63,6 +61,15 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
             this.material = material;
             this.price = price;
             this.name = name;
+        }
+    }
+
+    static class Filler {
+        final ItemStack item;
+        final List<Integer> slots;
+        Filler(ItemStack item, List<Integer> slots) {
+            this.item = item;
+            this.slots = slots;
         }
     }
 
@@ -84,7 +91,8 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
     private void load() {
         reloadConfig();
         entriesBySlot.clear();
-        fillerSlots.clear();
+        fillers.clear();
+        decorations.clear();
 
         menuTitle = getConfig().getString("menu.title", "&8| Miner |");
         menuSize = getConfig().getInt("menu.size", 54);
@@ -104,18 +112,47 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
         msgSoldAll = getConfig().getString("messages.sold-all", "&aSold everything for %total%");
         msgNothing = getConfig().getString("messages.nothing-to-sell", "&cNothing to sell.");
 
-        fillerMat = matOr(getConfig().getString("filler.material"), Material.GRAY_STAINED_GLASS_PANE);
-        fillerName = getConfig().getString("filler.name", "&7");
-        fillerSlots.addAll(getConfig().getIntegerList("filler.slots"));
+        // Fillers (one or more groups, each with its own material)
+        ConfigurationSection fillerSec = getConfig().getConfigurationSection("fillers");
+        if (fillerSec != null) {
+            for (String key : fillerSec.getKeys(false)) {
+                ConfigurationSection g = fillerSec.getConfigurationSection(key);
+                if (g == null) continue;
+                Material m = matOr(g.getString("material"), Material.GRAY_STAINED_GLASS_PANE);
+                String name = g.getString("name", "&7");
+                List<Integer> slots = new ArrayList<>(g.getIntegerList("slots"));
+                fillers.add(new Filler(icon(m, name, Collections.<String>emptyList()), slots));
+            }
+        }
+
+        // Decorations (non-clickable, e.g. info head)
+        ConfigurationSection decoSec = getConfig().getConfigurationSection("decorations");
+        if (decoSec != null) {
+            for (String key : decoSec.getKeys(false)) {
+                ConfigurationSection d = decoSec.getConfigurationSection(key);
+                if (d == null) continue;
+                int slot = d.getInt("slot", -1);
+                if (slot < 0 || slot >= menuSize) continue;
+                Material m = matOr(d.getString("material"), Material.PAPER);
+                String name = d.getString("name", " ");
+                List<String> lore = d.getStringList("lore");
+                String texture = d.getString("skull-texture", null);
+                ItemStack it = (texture != null && !texture.isEmpty())
+                        ? skull(texture, name, lore)
+                        : icon(m, name, lore);
+                decorations.put(slot, it);
+            }
+        }
 
         exitSlot = getConfig().getInt("exit.slot", 48);
-        exitMat = matOr(getConfig().getString("exit.material"), Material.BARRIER);
-        exitName = getConfig().getString("exit.name", "&cExit");
+        exitItem = icon(matOr(getConfig().getString("exit.material"), Material.BARRIER),
+                getConfig().getString("exit.name", "&cExit"),
+                getConfig().getStringList("exit.lore"));
 
-        sellAllSlot = getConfig().getInt("sell-all.slot", 50);
-        sellAllMat = matOr(getConfig().getString("sell-all.material"), Material.HOPPER);
-        sellAllName = getConfig().getString("sell-all.name", "&aSell all");
-        sellAllLore = getConfig().getStringList("sell-all.lore");
+        sellAllSlot = getConfig().getInt("sell-all.slot", 40);
+        sellAllItem = icon(matOr(getConfig().getString("sell-all.material"), Material.CHEST_MINECART),
+                getConfig().getString("sell-all.name", "&aSell all"),
+                getConfig().getStringList("sell-all.lore"));
 
         itemLoreTemplate = getConfig().getStringList("item-lore");
 
@@ -160,13 +197,15 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
         Inventory inv = Bukkit.createInventory(holder, menuSize, color(menuTitle));
         holder.inv = inv;
 
-        ItemStack filler = icon(fillerMat, fillerName, Collections.<String>emptyList());
-        for (int slot : fillerSlots) if (slot >= 0 && slot < menuSize) inv.setItem(slot, filler);
+        for (Filler f : fillers)
+            for (int slot : f.slots)
+                if (slot >= 0 && slot < menuSize) inv.setItem(slot, f.item.clone());
 
-        if (exitSlot >= 0 && exitSlot < menuSize)
-            inv.setItem(exitSlot, icon(exitMat, exitName, Collections.<String>emptyList()));
-        if (sellAllSlot >= 0 && sellAllSlot < menuSize)
-            inv.setItem(sellAllSlot, icon(sellAllMat, sellAllName, sellAllLore));
+        for (Map.Entry<Integer, ItemStack> e : decorations.entrySet())
+            inv.setItem(e.getKey(), e.getValue().clone());
+
+        if (exitSlot >= 0 && exitSlot < menuSize) inv.setItem(exitSlot, exitItem.clone());
+        if (sellAllSlot >= 0 && sellAllSlot < menuSize) inv.setItem(sellAllSlot, sellAllItem.clone());
 
         for (Map.Entry<Integer, SellEntry> e : entriesBySlot.entrySet())
             inv.setItem(e.getKey(), buildSellIcon(player, e.getValue()));
@@ -189,17 +228,46 @@ public class MinerSellerPlugin extends JavaPlugin implements Listener, CommandEx
 
     private ItemStack icon(Material m, String name, List<String> lore) {
         ItemStack is = new ItemStack(m);
-        ItemMeta meta = is.getItemMeta();
-        if (meta != null) {
-            if (name != null) meta.setDisplayName(color(name));
-            if (lore != null && !lore.isEmpty()) {
-                List<String> colored = new ArrayList<>();
-                for (String l : lore) colored.add(color(l));
-                meta.setLore(colored);
-            }
-            is.setItemMeta(meta);
-        }
+        applyMeta(is, name, lore);
         return is;
+    }
+
+    private ItemStack skull(String base64, String name, List<String> lore) {
+        ItemStack is = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta meta = is.getItemMeta();
+        if (meta instanceof SkullMeta) {
+            try {
+                Class<?> profileClass = Class.forName("com.mojang.authlib.GameProfile");
+                Class<?> propertyClass = Class.forName("com.mojang.authlib.properties.Property");
+                Object profile = profileClass.getConstructor(UUID.class, String.class)
+                        .newInstance(UUID.randomUUID(), "minerseller");
+                Object property = propertyClass.getConstructor(String.class, String.class)
+                        .newInstance("textures", base64);
+                Object properties = profileClass.getMethod("getProperties").invoke(profile);
+                properties.getClass().getMethod("put", Object.class, Object.class)
+                        .invoke(properties, "textures", property);
+                Field f = meta.getClass().getDeclaredField("profile");
+                f.setAccessible(true);
+                f.set(meta, profile);
+            } catch (Exception ex) {
+                getLogger().warning("Could not apply skull texture: " + ex.getMessage());
+            }
+        }
+        is.setItemMeta(meta);
+        applyMeta(is, name, lore);
+        return is;
+    }
+
+    private void applyMeta(ItemStack is, String name, List<String> lore) {
+        ItemMeta meta = is.getItemMeta();
+        if (meta == null) return;
+        if (name != null) meta.setDisplayName(color(name));
+        if (lore != null && !lore.isEmpty()) {
+            List<String> colored = new ArrayList<>();
+            for (String l : lore) colored.add(color(l));
+            meta.setLore(colored);
+        }
+        is.setItemMeta(meta);
     }
 
     @EventHandler

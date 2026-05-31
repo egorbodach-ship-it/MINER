@@ -1,51 +1,74 @@
-# ============================================
-#            MinerSeller — Скупщик
-# ============================================
+# ============================================================
+#  MinerSeller — конфигурация меню скупщика руды
+#  Цвета: поддерживаются & коды и HEX (#RRGGBB или &#RRGGBB)
+# ============================================================
 
 menu:
-  title: '&8| &#A6E0EEMɪɴᴇʀ &8|'
+  title: '              &8| ᴍɪɴᴇʀ |'
   size: 54
 
 # Команда выдачи валюты. %player% и %amount% подставляются автоматически.
 eco-command: 'eco give %player% %amount%'
-
-# Звук при продаже (имя из Bukkit Sound). Оставь пустым, чтобы отключить.
+# Звук при успешной продаже (имя из org.bukkit.Sound). Пусто = без звука.
 sell-sound: ENTITY_EXPERIENCE_ORB_PICKUP
 
 messages:
   prefix: '&8[&#A6E0EEMiner&8] &r'
   no-items: '&cУ тебя нет &f%material% &cв инвентаре.'
-  sold: '&aПродано &f%amount%&7x &f%material% &aза &e%total%$&a.'
-  sold-all: '&aПродано всё на сумму &e%total%$&a.'
+  sold: '&aПродано &f%amount%&7x &f%material% &aза &e%total% ©&a.'
+  sold-all: '&aПродано всё на сумму &e%total% ©&a.'
   nothing-to-sell: '&cНечего продавать.'
 
-# Рамка по краям меню
-filler:
-  material: GRAY_STAINED_GLASS_PANE
-  name: '&7'
-  slots: [0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,49,51,52,53]
+# Стеклянные рамки. Можно задать несколько групп с разными материалами.
+fillers:
+  gray:
+    material: GRAY_STAINED_GLASS_PANE
+    name: '&7'
+    slots: [9, 17, 18, 26, 27, 29, 30, 31, 32, 33, 35]
+  black:
+    material: BLACK_STAINED_GLASS_PANE
+    name: '&7'
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 49, 51, 52, 53]
 
-# Кнопка "Продать всё"
-sell-all:
-  material: HOPPER
-  slot: 50
-  name: '&#B9E6AE▪ Продать всё'
-  lore:
-    - ''
-    - ' &#ddddddПродаёт &#EFE0A1все скупаемые ресурсы'
-    - ' &#ddddddиз твоего инвентаря.'
-    - ''
-    - ' &#eaff43► &#EFE0A1Нажми, чтобы продать всё'
-    - ''
+# Декоративные предметы без действия (например, голова-информация).
+decorations:
+  info:
+    material: PLAYER_HEAD
+    slot: 50
+    skull-texture: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTFmNTQ0M2M4ZTMwYWQ3YTdhZjIzNjdmODgyMWQ4Mzk4NWZmYjU3OTA0M2NkZmQyMTc3NDFmYmM2ZTljMmVjYyJ9fX0='
+    name: '&7▪ &#EFE0A1Скупщик руды'
+    lore:
+      - ''
+      - ' &#ddddddТут можно продать руду.'
+      - ''
+      - ' &#eaff43> &#EFE0A1ЛКМ &7| &#B0B0B0продать x1'
+      - ' &#eaff43> &#EFE0A1ПКМ &7| &#B0B0B0продать x64'
+      - ' &#eaff43> &#EFE0A1ШИФТ+ЛКМ &7| &#B0B0B0продать всё'
+      - ''
 
-# Кнопка выхода
 exit:
   material: WITHER_SKELETON_SKULL
   slot: 48
   name: '&7▪ &#EEBDA6Выход'
+  lore:
+    - ''
+    - ' &#ddddddНажмите, чтобы закрыть меню.'
+    - ''
 
-# Шаблон описания (lore) для скупаемых предметов.
-# Плейсхолдеры: %price1% %price64% %priceAll% %have%
+# Кнопка "Продать всё" — продаёт все скупаемые руды из инвентаря (нативно, без EssentialsX).
+sell-all:
+  material: CHEST_MINECART
+  slot: 40
+  name: '&7▪ &#B9E6AEПродать всё'
+  lore:
+    - ''
+    - ' &#ddddddПродаёт все скупаемые руды'
+    - ' &#ddddddиз твоего инвентаря.'
+    - ''
+    - ' &#eaff43> &#EFE0A1Нажми, чтобы продать всё'
+    - ''
+
+# Шаблон лора для каждой руды. Плейсхолдеры: %price1% %price64% %priceAll% %have%
 item-lore:
   - ''
   - ' &#ddddddЦена за &#EFE0A1x1: &f%price1%&#EBC162 © &#b9b9b9(ЛКМ)'
@@ -53,58 +76,58 @@ item-lore:
   - ''
   - ' &#ddddddЦена за &#EFE0A1всё: &f%priceAll%&#EBC162 © &#b9b9b9(ШИФТ+ЛКМ)'
   - ''
+  - ' &#B9E6AE- &#ddddddМожно продавать без лимита.'
   - ' &#ddddddВ инвентаре: &#EFE0A1%have% &#ddddddшт.'
   - ''
 
-# Скупаемые предметы. price — цена за 1 штуку.
 items:
   coal:
     material: COAL
-    slot: 20
+    slot: 11
     price: 5
-    name: '&#FFFFFFУголь'
-  copper:
-    material: RAW_COPPER
-    slot: 21
-    price: 7
-    name: '&#E0966FСырая медь'
-  iron:
+    name: '&7▪ &#2E2E2EУголь'
+  raw_iron:
     material: RAW_IRON
-    slot: 22
-    price: 12
-    name: '&#E8E8E8Сырое железо'
-  gold:
+    slot: 12
+    price: 15
+    name: '&7▪ &#D8D8D8Железная руда'
+  raw_copper:
+    material: RAW_COPPER
+    slot: 13
+    price: 10
+    name: '&7▪ &#D8894DМедная руда'
+  raw_gold:
     material: RAW_GOLD
-    slot: 23
+    slot: 14
     price: 30
-    name: '&#FFE259Сырое золото'
+    name: '&7▪ &#FFD966Золотая руда'
   redstone:
     material: REDSTONE
-    slot: 24
-    price: 6
-    name: '&#FF5555Редстоун'
+    slot: 15
+    price: 8
+    name: '&7▪ &#FF4141Редстоун'
   lapis:
     material: LAPIS_LAZULI
-    slot: 29
+    slot: 20
     price: 8
-    name: '&#3B6CFFЛазурит'
-  quartz:
-    material: QUARTZ
-    slot: 30
-    price: 9
-    name: '&#F2EDE4Кварц'
-  diamond:
-    material: DIAMOND
-    slot: 31
-    price: 120
-    name: '&#4AEDD9Алмаз'
+    name: '&7▪ &#4A72FFЛазурит'
   emerald:
     material: EMERALD
-    slot: 32
+    slot: 21
+    price: 45
+    name: '&7▪ &#51FF7AИзумруд'
+  diamond:
+    material: DIAMOND
+    slot: 22
     price: 60
-    name: '&#3DDC84Изумруд'
+    name: '&7▪ &#6EEBFFАлмаз'
   netherite:
-    material: NETHERITE_SCRAP
-    slot: 33
-    price: 800
-    name: '&#6E5B5BНезеритовый лом'
+    material: NETHERITE_INGOT
+    slot: 23
+    price: 250
+    name: '&7▪ &#8A8A8AНезерит'
+  quartz:
+    material: QUARTZ
+    slot: 24
+    price: 12
+    name: '&7▪ &#F5F5F5Кварц'
